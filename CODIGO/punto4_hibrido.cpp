@@ -1,8 +1,8 @@
 // Práctico Final Integrador - Computación Avanzada
-// Versión MPI (C++): genera una imagen estilo cartoon = bordes + posterizado.
+// Versión HÍBRIDA MPI + OPENMP (C++): genera una imagen estilo cartoon = bordes + posterizado.
 //
-// Compilar:  mpicxx -O2 -o cartoon_mpi cartoon_mpi.cpp
-// Usar:      mpirun -np PROCESOS ./cartoon_mpi entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0]
+// Compilar:  mpicxx -O2 -fopenmp -o punto4_hibrido punto4_hibrido.cpp
+// Usar:      mpirun -np PROCESOS ./punto4_hibrido entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0] [hilos=2]
 //            bordes_oscuros: 0 = los bordes se suman (blancos), 1 = se restan (contorno negro)
 // Las imágenes son PPM (P6): una cabecera de texto y después los bytes R,G,B de cada pixel, fila por fila.
 
@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
+#include <omp.h>
 #include <string>
 #include <vector>
 using namespace std;
@@ -51,10 +52,12 @@ bool guardarPPM(const string& ruta, const Imagen& img) {
 }
 
 // Estas funciones son las mismas de la versión OpenMP, pero cada proceso MPI las aplica solo a su bloque de filas.
+// Dentro de cada proceso, 'parallel for' reparte esas filas entre los hilos.
 
 // Pasa a escala de grises (1 byte por pixel) con la fórmula de la teoría.
 vector<unsigned char> aGrises(const Imagen& img) {
     vector<unsigned char> gris((size_t)img.ancho * img.alto);
+    #pragma omp parallel for
     for (size_t p = 0; p < gris.size(); p++)
         gris[p] = 0.30 * img.datos[3 * p] + 0.59 * img.datos[3 * p + 1] + 0.11 * img.datos[3 * p + 2];
     return gris;
@@ -65,6 +68,7 @@ vector<unsigned char> aGrises(const Imagen& img) {
 vector<unsigned char> borronear(const vector<unsigned char>& gris, int ancho, int alto, int k) {
     int radio = k / 2;  // 3x3 -> radio 1, 5x5 -> radio 2
     vector<unsigned char> salida(gris.size());
+    #pragma omp parallel for
     for (int i = 0; i < alto; i++) {
         for (int j = 0; j < ancho; j++) {
             int suma = 0, cantidad = 0;
@@ -88,6 +92,7 @@ vector<unsigned char> borronear(const vector<unsigned char>& gris, int ancho, in
 // El marco de la imagen no tiene vecindad completa y queda en 0 (negro, el valor neutro).
 vector<unsigned char> detectarBordes(const vector<unsigned char>& borrosa, int ancho, int alto, int umbral) {
     vector<unsigned char> bordes(borrosa.size(), 0);
+    #pragma omp parallel for
     for (int i = 1; i < alto - 1; i++) {
         for (int j = 1; j < ancho - 1; j++) {
             // v(di, dj) es el vecino que está di filas y dj columnas desde el pixel (i, j)
@@ -106,6 +111,7 @@ vector<unsigned char> detectarBordes(const vector<unsigned char>& borrosa, int a
 // Se aplica igual a los tres canales. Con 3 niveles: [0..85] -> 42, [86..170] -> 128, [171..255] -> 213.
 // 'img' se recibe por copia, así la original no se modifica.
 Imagen posterizar(Imagen img, int niveles) {
+    #pragma omp parallel for
     for (size_t p = 0; p < img.datos.size(); p++)
         img.datos[p] = (img.datos[p] * niveles / 256 + 0.5) * 256.0 / niveles;
     return img;
@@ -113,6 +119,7 @@ Imagen posterizar(Imagen img, int niveles) {
 
 // Suma la imagen posterizada con la de bordes (o la resta, si bordesOscuros) y recorta a [0, 255].
 Imagen combinar(Imagen img, const vector<unsigned char>& bordes, bool bordesOscuros) {
+    #pragma omp parallel for
     for (size_t p = 0; p < bordes.size(); p++) {
         for (int c = 0; c < 3; c++) {
             int valor = img.datos[3 * p + c] + (bordesOscuros ? -bordes[p] : bordes[p]);
@@ -129,7 +136,7 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &procesos);
 
     if (argc < 3) {
-        if (rank == 0) cerr << "Uso: mpirun -np P " << argv[0] << " entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0]\n";
+        if (rank == 0) cerr << "Uso: mpirun -np P " << argv[0] << " entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0] [hilos=2]\n";
         MPI_Finalize();
         return 1;
     }
@@ -137,6 +144,8 @@ int main(int argc, char** argv) {
     int niveles = (argc > 4) ? atoi(argv[4]) : 3;
     int umbral = (argc > 5) ? atoi(argv[5]) : 150;
     bool bordesOscuros = (argc > 6) && atoi(argv[6]) != 0;
+    int hilos = (argc > 7) ? atoi(argv[7]) : 2;
+    omp_set_num_threads(hilos);
 
     // 1) El proceso 0 lee la imagen y avisa el tamaño a todos (si falla avisa tamaño 0).
     Imagen original;
@@ -220,7 +229,8 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         if (!guardarPPM(argv[2], cartoon)) cerr << "No se pudo guardar la imagen: " << argv[2] << "\n";
         cout << "Imagen " << ancho << "x" << alto << " | filtro " << filtro << "x" << filtro
-             << " | niveles " << niveles << " | umbral " << umbral << " | procesos " << procesos << " | tiempo " << segundos << " s\n";
+             << " | niveles " << niveles << " | umbral " << umbral << " | procesos " << procesos
+             << " | hilos " << hilos << " | tiempo " << segundos << " s\n";
     }
     MPI_Finalize();
     return 0;

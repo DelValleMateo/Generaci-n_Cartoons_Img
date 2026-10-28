@@ -1,8 +1,8 @@
 // Práctico Final Integrador - Computación Avanzada
 // Versión OPENMP (C++): genera una imagen estilo cartoon = bordes + posterizado.
 //
-// Compilar:  g++ -O2 -fopenmp -o cartoon_openmp cartoon_openmp.cpp
-// Usar:      ./cartoon_openmp entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0] [hilos=4]
+// Compilar:  g++ -O2 -fopenmp -o punto3_openmp punto3_openmp.cpp
+// Usar:      ./punto3_openmp entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0] [hilos=4]
 //            bordes_oscuros: 0 = los bordes se suman (blancos), 1 = se restan (contorno negro)
 // Las imágenes son PPM (P6): una cabecera de texto y después los bytes R,G,B de cada pixel, fila por fila.
 

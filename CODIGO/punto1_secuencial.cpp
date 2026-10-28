@@ -1,8 +1,8 @@
 // Práctico Final Integrador - Computación Avanzada
 // Versión SECUENCIAL (C++): genera una imagen estilo cartoon = bordes + posterizado.
 //
-// Compilar:  g++ -O2 -o cartoon_secuencial cartoon_secuencial.cpp
-// Usar:      ./cartoon_secuencial entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0]
+// Compilar:  g++ -O2 -o punto1_secuencial punto1_secuencial.cpp
+// Usar:      ./punto1_secuencial entrada.ppm salida.ppm [filtro=3] [niveles=3] [umbral=150] [bordes_oscuros=0]
 //            bordes_oscuros: 0 = los bordes se suman (blancos), 1 = se restan (contorno negro)
 // Las imágenes son PPM (P6): una cabecera de texto y después los bytes R,G,B de cada pixel, fila por fila.
 
