@@ -1,5 +1,7 @@
 # Práctico Final Integrador – Computación Avanzada (Cartoon)
 
+> Esta es la documentación técnica original de `CODIGO`, conservada como referencia para Linux/WSL. El [README principal](../README.md) describe el estado verificado de la entrega y el entorno Windows con MSYS2 y Microsoft MPI utilizado para las mediciones.
+
 Genera una imagen estilo *cartoon* a partir de una imagen RGB:
 
 1. **Bordes:** escala de grises → filtro de promedio (3x3 o 5x5) → Sobel → umbral.
@@ -24,7 +26,7 @@ Formato de imagen: **PPM P6** (sin librerías externas). Se convierte desde JPG/
 
 ## 1. Instalación
 
-### Opción A (recomendada en Windows): WSL2 con Ubuntu
+### Opción A: WSL2 con Ubuntu (alternativa no usada para las mediciones publicadas)
 
 1. Abrir PowerShell como administrador y ejecutar `wsl --install -d Ubuntu`. Reiniciar la PC cuando lo pida.
 2. Comprobar que anda: `wsl -d Ubuntu -u root -- echo hola` debe imprimir `hola`.
@@ -51,7 +53,7 @@ Mismo comando de instalación del paso 3 de arriba.
 
 ### Opción C: sin MPI (solo punto 1 y 3)
 
-Con MSYS2 o MinGW alcanza `g++` con soporte de OpenMP (`-fopenmp`). Las versiones MPI e híbrido necesitan MPI, así que hay que probarlas en WSL o en la computadora de la facultad.
+Con MSYS2 o MinGW alcanza `g++` con soporte de OpenMP (`-fopenmp`) para los puntos 1 y 3. Las versiones MPI e híbrida también se probaron en Windows con Microsoft MPI; ver el README principal para ese entorno.
 
 ---
 
@@ -60,7 +62,7 @@ Con MSYS2 o MinGW alcanza `g++` con soporte de OpenMP (`-fopenmp`). Las versione
 En WSL los discos de Windows están en `/mnt/`:
 
 ```bash
-cd "/mnt/e/FACULTAD/CUARTO_ANO/COMPUTACION AVANZADA/TP FINAL/CODIGO"
+cd /ruta/al/repositorio/CODIGO
 ls
 ```
 
@@ -188,7 +190,7 @@ Después de medir, comparar una salida paralela con la del secuencial (`cmp`) pa
 
 ## 8. Cosas a tener en cuenta para el informe
 
-- Con 800x800 el secuencial tarda ~0,03 s: el costo de crear hilos y de comunicar en MPI puede ser mayor que la ganancia. Es esperable y se explica en el análisis.
+- En imágenes pequeñas, el costo de crear hilos y comunicar en MPI puede reducir la ganancia. Los tiempos medidos están en `../resultados/matriz_completa/resumen.csv`.
 - El tiempo medido **excluye** leer y guardar la imagen, y en MPI/híbrido **incluye** la comunicación (reparto y recolección de filas).
 - **Halo en MPI:** cada proceso recibe filas extra de sus vecinos: 2 por lado con filtro 3x3 y 3 con 5x5 (k/2 del filtro + 1 de Sobel). El posterizado no necesita halo.
 - **OpenMP:** el `parallel for` tiene una barrera implícita al final, así cada etapa empieza cuando la anterior terminó en todos los hilos.

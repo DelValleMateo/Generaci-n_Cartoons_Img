@@ -1,0 +1,5 @@
+VALIDACIÓN APROBADA
+12 casos de imagen/filtro/niveles; 11 configuraciones por caso.
+396 mediciones: tres repeticiones únicas por configuración.
+132 promedios, speedups y eficiencias recalculados contra su referencia secuencial.
+Salidas equivalentes: un único SHA-256 por cada uno de los 12 casos.

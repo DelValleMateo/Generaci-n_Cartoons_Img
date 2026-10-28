@@ -1,0 +1,5 @@
+bin/
+*.exe
+*.o
+*.ppm
+__pycache__/

@@ -7,6 +7,7 @@
 // Las imágenes son PPM (P6): una cabecera de texto y después los bytes R,G,B de cada pixel, fila por fila.
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -37,7 +38,11 @@ bool leerPPM(const string& ruta, Imagen& img) {
     leerNumero(img.ancho);
     leerNumero(img.alto);
     leerNumero(maximo);
-    f.get();  // el espacio en blanco antes de los datos
+    if (!f || img.ancho <= 0 || img.alto <= 0 || maximo != 255 ||
+        (size_t)img.ancho * img.alto > (size_t)2147483647 / 3) return false;
+    int separador = f.get();
+    if (separador == EOF || !isspace((unsigned char)separador)) return false;
+    if (separador == '\r' && f.peek() == '\n') f.get();
 
     img.datos.resize((size_t)img.ancho * img.alto * 3);
     f.read((char*)img.datos.data(), img.datos.size());
@@ -145,6 +150,12 @@ int main(int argc, char** argv) {
     int umbral = (argc > 5) ? atoi(argv[5]) : 150;
     bool bordesOscuros = (argc > 6) && atoi(argv[6]) != 0;
     int hilos = (argc > 7) ? atoi(argv[7]) : 2;
+    if ((filtro != 3 && filtro != 5) || (niveles != 3 && niveles != 9) || umbral < 0 || umbral > 2040 || hilos < 1) {
+        if (rank == 0) cerr << "Parametros invalidos: filtro 3/5, niveles 3/9, umbral 0..2040, hilos >= 1\n";
+        MPI_Finalize();
+        return 1;
+    }
+    omp_set_dynamic(0);
     omp_set_num_threads(hilos);
 
     // 1) El proceso 0 lee la imagen y avisa el tamaño a todos (si falla avisa tamaño 0).
@@ -226,12 +237,26 @@ int main(int argc, char** argv) {
 
     double segundos = MPI_Wtime() - inicio;
 
+    int hilosEfectivos = 0, minimoHilos = 0, maximoHilos = 0;
+    #pragma omp parallel
+    {
+        #pragma omp single
+        hilosEfectivos = omp_get_num_threads();
+    }
+    MPI_Reduce(&hilosEfectivos, &minimoHilos, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&hilosEfectivos, &maximoHilos, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+
+    int errorSalida = 0;
     if (rank == 0) {
-        if (!guardarPPM(argv[2], cartoon)) cerr << "No se pudo guardar la imagen: " << argv[2] << "\n";
+        if (!guardarPPM(argv[2], cartoon)) {
+            cerr << "No se pudo guardar la imagen: " << argv[2] << "\n";
+            errorSalida = 1;
+        }
         cout << "Imagen " << ancho << "x" << alto << " | filtro " << filtro << "x" << filtro
              << " | niveles " << niveles << " | umbral " << umbral << " | procesos " << procesos
-             << " | hilos " << hilos << " | tiempo " << segundos << " s\n";
+             << " | hilos " << hilos << " | hilos efectivos " << minimoHilos << ".." << maximoHilos
+             << " | tiempo " << segundos << " s\n";
     }
     MPI_Finalize();
-    return 0;
+    return errorSalida;
 }

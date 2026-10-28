@@ -1,0 +1,5 @@
+Fotografía de Fronalpstock (Suiza), por Adrian Michael.
+Fuente: https://commons.wikimedia.org/wiki/File:Fronalpstock.jpg
+Licencia elegida: Creative Commons Atribución-CompartirIgual 3.0 (CC BY-SA 3.0).
+Se convirtió a PPM P6 y se transformó mediante el algoritmo cartoon del práctico.
+Las cuatro imágenes cartoon derivadas comparten la misma licencia.

@@ -1,0 +1,44 @@
+== Compilando ==
+== Comparando contra el secuencial ==
+OK     openmp  [3 3 150 0] hilos=1
+OK     openmp  [3 3 150 0] hilos=2
+OK     openmp  [3 3 150 0] hilos=4
+OK     mpi     [3 3 150 0] procesos=1
+OK     mpi     [3 3 150 0] procesos=2
+OK     mpi     [3 3 150 0] procesos=3
+OK     mpi     [3 3 150 0] procesos=4
+OK     mpi     [3 3 150 0] procesos=7
+OK     hibrido [3 3 150 0] procesos=2 hilos=2
+OK     hibrido [3 3 150 0] procesos=3 hilos=2
+OK     openmp  [3 9 150 0] hilos=1
+OK     openmp  [3 9 150 0] hilos=2
+OK     openmp  [3 9 150 0] hilos=4
+OK     mpi     [3 9 150 0] procesos=1
+OK     mpi     [3 9 150 0] procesos=2
+OK     mpi     [3 9 150 0] procesos=3
+OK     mpi     [3 9 150 0] procesos=4
+OK     mpi     [3 9 150 0] procesos=7
+OK     hibrido [3 9 150 0] procesos=2 hilos=2
+OK     hibrido [3 9 150 0] procesos=3 hilos=2
+OK     openmp  [5 3 150 1] hilos=1
+OK     openmp  [5 3 150 1] hilos=2
+OK     openmp  [5 3 150 1] hilos=4
+OK     mpi     [5 3 150 1] procesos=1
+OK     mpi     [5 3 150 1] procesos=2
+OK     mpi     [5 3 150 1] procesos=3
+OK     mpi     [5 3 150 1] procesos=4
+OK     mpi     [5 3 150 1] procesos=7
+OK     hibrido [5 3 150 1] procesos=2 hilos=2
+OK     hibrido [5 3 150 1] procesos=3 hilos=2
+OK     openmp  [5 9 150 1] hilos=1
+OK     openmp  [5 9 150 1] hilos=2
+OK     openmp  [5 9 150 1] hilos=4
+OK     mpi     [5 9 150 1] procesos=1
+OK     mpi     [5 9 150 1] procesos=2
+OK     mpi     [5 9 150 1] procesos=3
+OK     mpi     [5 9 150 1] procesos=4
+OK     mpi     [5 9 150 1] procesos=7
+OK     hibrido [5 9 150 1] procesos=2 hilos=2
+OK     hibrido [5 9 150 1] procesos=3 hilos=2
+
+TODO OK
